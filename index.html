@@ -3,69 +3,134 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vikash Kumar - DevOps Engineer</title>
+    <title>Vikash Kumar — DevOps Engineer</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Orbitron:wght@400;600;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
         :root {
-            --primary: #10b981;
-            --secondary: #059669;
-            --accent: #34d399;
-            --terminal-bg: #0d1117;
-            --terminal-text: #00ff00;
-            --terminal-header: #21262d;
-            --dark-bg: #0a0a0a;
-            --dark-surface: #151515;
-            --dark-text: #e0e0e0;
-            --light-bg: #f5f7fa;
-            --light-surface: #ffffff;
-            --light-text: #222222;
-            --shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
-            --transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            --primary: #00ff88;
+            --secondary: #00cc6a;
+            --accent: #00ffcc;
+            --terminal-bg: #0a0e14;
+            --terminal-text: #00ff88;
+            --terminal-header: #1a2332;
+            --hud-green: #00ff88;
+            --hud-glow: rgba(0, 255, 136, 0.4);
+            --dark-bg: #050810;
+            --dark-surface: #0d1520;
+            --dark-text: #c8e6c9;
+            --game-panel: rgba(10, 30, 40, 0.85);
+            --border-glow: 0 0 15px var(--hud-glow);
+            --transition: all 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             --gradient: linear-gradient(135deg, var(--primary), var(--accent));
         }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        html { scroll-behavior: smooth; }
 
         body {
-            background-color: var(--light-bg);
-            color: var(--light-text);
-            font-family: 'Inter', sans-serif;
-            transition: var(--transition);
+            background: var(--dark-bg);
+            color: var(--dark-text);
+            font-family: 'Share Tech Mono', 'JetBrains Mono', monospace;
             overflow-x: hidden;
             line-height: 1.6;
+            min-height: 100vh;
+        }
+        body.custom-cursor-active {
+            cursor: none;
+        }
+        body.custom-cursor-active a,
+        body.custom-cursor-active button {
+            cursor: none;
         }
 
-        body.dark-mode {
-            background-color: var(--dark-bg);
-            color: var(--dark-text);
+        /* ——— Custom Cursor = Your Character (mini avatar follows mouse) ——— */
+        .custom-cursor {
+            position: fixed;
+            width: 28px;
+            height: 38px;
+            pointer-events: none;
+            z-index: 99999;
+            transform: translate(-50%, -50%);
+            left: 0;
+            top: 0;
+        }
+        .cursor-character {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+        .cursor-character .cursor-head {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 18px;
+            height: 18px;
+            background: linear-gradient(180deg, rgba(0, 255, 136, 0.35), rgba(0, 150, 80, 0.4));
+            border: 1.5px solid var(--primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.5rem;
+            color: var(--primary);
+            box-shadow: 0 0 8px var(--hud-glow);
+        }
+        .cursor-character .cursor-body {
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 22px;
+            height: 24px;
+            background: linear-gradient(180deg, rgba(0, 255, 136, 0.3), rgba(0, 204, 106, 0.25));
+            border: 1.5px solid var(--primary);
+            border-radius: 6px 6px 2px 2px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.55rem;
+            color: var(--primary);
+            box-shadow: 0 0 10px var(--hud-glow);
+        }
+        .custom-cursor.hover .cursor-head {
+            width: 20px;
+            height: 20px;
+            font-size: 0.6rem;
+        }
+        .custom-cursor.hover .cursor-body {
+            width: 24px;
+            height: 26px;
+            font-size: 0.65rem;
+        }
+        .custom-cursor.hidden {
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        #canvas3d {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: -1;
         }
 
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 20px;
-        }
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
 
-        /* Header Styles */
+        /* ——— GAME HUD HEADER ——— */
         header {
-            padding: 15px 0;
+            padding: 12px 0;
             position: fixed;
             width: 100%;
             top: 0;
             z-index: 1000;
-            background-color: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            box-shadow: var(--shadow);
+            background: linear-gradient(180deg, rgba(5, 8, 16, 0.95) 0%, rgba(5, 8, 16, 0.6) 100%);
+            backdrop-filter: blur(12px);
+            border-bottom: 2px solid var(--primary);
+            box-shadow: var(--border-glow);
             transition: var(--transition);
-        }
-
-        body.dark-mode header {
-            background-color: rgba(10, 10, 10, 0.95);
         }
 
         .header-content {
@@ -75,152 +140,361 @@
         }
 
         .logo {
-            font-size: 1.5rem;
+            font-size: 1.4rem;
             font-weight: 700;
-            background: var(--gradient);
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-            font-family: 'JetBrains Mono', monospace;
+            color: var(--primary);
+            font-family: 'Orbitron', monospace;
+            text-shadow: 0 0 20px var(--hud-glow);
+            letter-spacing: 2px;
         }
 
         .nav-links {
             display: flex;
-            gap: 20px;
+            gap: 8px;
         }
 
         .nav-links a {
             text-decoration: none;
-            color: inherit;
+            color: var(--dark-text);
             font-weight: 500;
-            position: relative;
+            font-size: 0.8rem;
+            padding: 8px 14px;
+            border: 1px solid rgba(0, 255, 136, 0.3);
+            border-radius: 4px;
             transition: var(--transition);
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.9rem;
+            font-family: 'Share Tech Mono', monospace;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
         }
-
         .nav-links a:hover {
             color: var(--primary);
-        }
-
-        .nav-links a::after {
-            content: '';
-            position: absolute;
-            bottom: -5px;
-            left: 0;
-            width: 0;
-            height: 2px;
-            background: var(--gradient);
-            transition: var(--transition);
-        }
-
-        .nav-links a:hover::after {
-            width: 100%;
-        }
-
-        .theme-toggle {
-            background: none;
-            border: none;
-            font-size: 1.3rem;
-            cursor: pointer;
-            color: inherit;
-            transition: var(--transition);
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: rgba(16, 185, 129, 0.1);
-        }
-
-        .theme-toggle:hover {
-            transform: rotate(30deg);
-            background: rgba(16, 185, 129, 0.2);
+            border-color: var(--primary);
+            box-shadow: 0 0 15px var(--hud-glow);
+            transform: translateY(-2px);
         }
 
         .mobile-menu-btn {
             display: none;
             background: none;
-            border: none;
-            font-size: 1.5rem;
-            color: inherit;
+            border: 1px solid var(--primary);
+            font-size: 1.2rem;
+            color: var(--primary);
             cursor: pointer;
+            padding: 8px 12px;
+            border-radius: 4px;
         }
 
-        /* Hero Section */
+        /* ——— GAME WORLD HUD (Player Stats) ——— */
+        .game-hud {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            z-index: 999;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            padding: 10px 18px;
+            background: var(--game-panel);
+            border: 1px solid rgba(0, 255, 136, 0.4);
+            border-radius: 8px;
+            box-shadow: 0 0 25px var(--hud-glow);
+            font-size: 0.75rem;
+            letter-spacing: 1px;
+        }
+        .game-hud-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .game-hud-item i { color: var(--primary); }
+        .game-hud-item span { color: var(--dark-text); }
+        .game-hud-item strong { color: var(--primary); margin-left: 4px; }
+        .game-hud-avatar {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--dark-bg);
+            font-weight: 700;
+            font-size: 0.9rem;
+        }
+
+        /* ——— HERO CHARACTER (DevOps Engineer Avatar) ——— */
+        .hero-character {
+            width: 140px;
+            height: 180px;
+            position: relative;
+            flex-shrink: 0;
+            cursor: grab;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: none;
+            z-index: 100;
+        }
+        .hero-character:active {
+            cursor: grabbing;
+        }
+        .hero-character.dragging {
+            position: fixed !important;
+            margin: 0 !important;
+            pointer-events: auto;
+        }
+        .hero-character .drag-hint {
+            position: absolute;
+            bottom: -38px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.6rem;
+            color: var(--accent);
+            opacity: 0.8;
+            white-space: nowrap;
+            letter-spacing: 1px;
+            pointer-events: none;
+        }
+        .hero-character.dragging .drag-hint,
+        .hero-character.dragging .character-label {
+            display: none;
+        }
+        .hero-character.dragging .character-head {
+            animation: none;
+        }
+        .character-placeholder {
+            width: 140px;
+            height: 180px;
+            flex-shrink: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+        .character-body {
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 100px;
+            background: linear-gradient(180deg, rgba(0, 255, 136, 0.3), rgba(0, 204, 106, 0.2));
+            border: 2px solid var(--primary);
+            border-radius: 12px 12px 4px 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 20px var(--hud-glow);
+        }
+        .character-body i { font-size: 2rem; color: var(--primary); }
+        .character-head {
+            position: absolute;
+            bottom: 95px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(180deg, rgba(0, 255, 136, 0.25), rgba(0, 150, 80, 0.3));
+            border: 2px solid var(--primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+            color: var(--primary);
+            box-shadow: 0 0 15px var(--hud-glow);
+            animation: character-idle 2s ease-in-out infinite;
+        }
+        @keyframes character-idle {
+            0%, 100% { transform: translateX(-50%) translateY(0); }
+            50% { transform: translateX(-50%) translateY(-5px); }
+        }
+        .character-label {
+            position: absolute;
+            bottom: -28px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.7rem;
+            color: var(--primary);
+            white-space: nowrap;
+            letter-spacing: 2px;
+        }
+
+        /* ——— JENKINS PIPELINE VISUAL (Fix the Pipeline) ——— */
+        .pipeline-visual {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 32px;
+            padding: 20px;
+        }
+        .pipeline-stage {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .pipeline-node {
+            width: 56px;
+            height: 56px;
+            border: 2px solid rgba(0, 255, 136, 0.5);
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 2px;
+            background: rgba(10, 30, 40, 0.6);
+            color: var(--primary);
+            font-size: 1.2rem;
+            transition: all 0.5s ease;
+        }
+        .pipeline-node.fixed {
+            background: rgba(0, 255, 136, 0.2);
+            border-color: var(--primary);
+            box-shadow: 0 0 20px var(--hud-glow);
+        }
+        .pipeline-connector {
+            width: 24px;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+            opacity: 0.6;
+        }
+        .pipeline-connector.fixed { opacity: 1; }
+        .pipeline-node span { font-size: 0.58rem; text-transform: uppercase; letter-spacing: 0.5px; }
+
+        /* ——— TERRAFORM PROVISIONING (Infrastructure Build) ——— */
+        .terraform-visual {
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 28px;
+            min-height: 80px;
+        }
+        .tf-block {
+            width: 40px;
+            background: linear-gradient(180deg, var(--primary), var(--secondary));
+            border: 1px solid var(--primary);
+            border-radius: 4px;
+            opacity: 0.9;
+            animation: tf-provision 2s ease-out forwards;
+        }
+        .tf-block:nth-child(1) { height: 30px; animation-delay: 0.2s; }
+        .tf-block:nth-child(2) { height: 50px; animation-delay: 0.4s; }
+        .tf-block:nth-child(3) { height: 70px; animation-delay: 0.6s; }
+        .tf-block:nth-child(4) { height: 45px; animation-delay: 0.8s; }
+        .tf-block:nth-child(5) { height: 60px; animation-delay: 1s; }
+        .tf-block:nth-child(6) { height: 35px; animation-delay: 1.2s; }
+        @keyframes tf-provision {
+            from { height: 0 !important; opacity: 0; transform: scaleY(0); transform-origin: bottom; }
+            to { opacity: 0.9; transform: scaleY(1); transform-origin: bottom; }
+        }
+        .terraform-label {
+            text-align: center;
+            font-size: 0.7rem;
+            color: var(--primary);
+            margin-top: 8px;
+            letter-spacing: 1px;
+        }
+
+        /* ——— ZONE HEADERS (World Map Style) ——— */
+        .zone-banner {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 16px;
+            background: rgba(0, 255, 136, 0.08);
+            border: 1px solid rgba(0, 255, 136, 0.3);
+            border-radius: 6px;
+            margin-bottom: 16px;
+            font-size: 0.75rem;
+            color: var(--accent);
+            letter-spacing: 2px;
+        }
+        .zone-banner i { color: var(--primary); }
+
+        /* ——— HERO: MISSION BRIEFING ——— */
         .hero {
             min-height: 100vh;
             display: flex;
             align-items: center;
-            padding-top: 70px;
+            padding-top: 80px;
             position: relative;
             overflow: hidden;
+        }
+
+        .hero-inner {
+            display: flex;
+            align-items: center;
+            gap: 40px;
+            flex-wrap: wrap;
+            width: 100%;
         }
 
         .hero-content {
             flex: 1;
             z-index: 2;
+            min-width: 280px;
+        }
+
+        .hero-badge {
+            display: inline-block;
+            padding: 6px 14px;
+            border: 1px solid var(--primary);
+            color: var(--primary);
+            font-size: 0.75rem;
+            letter-spacing: 3px;
+            margin-bottom: 16px;
+            text-transform: uppercase;
         }
 
         .hero h1 {
-            font-size: 2.5rem;
-            margin-bottom: 20px;
+            font-size: 2.4rem;
+            margin-bottom: 18px;
             line-height: 1.2;
             font-weight: 700;
+            font-family: 'Orbitron', sans-serif;
+            color: #fff;
         }
 
         .hero h1 span {
-            background: var(--gradient);
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
+            color: var(--primary);
+            text-shadow: 0 0 30px var(--hud-glow);
         }
 
         .hero p {
-            font-size: 1.1rem;
-            margin-bottom: 30px;
-            max-width: 600px;
-            line-height: 1.6;
-            color: inherit;
-            opacity: 0.9;
+            font-size: 1rem;
+            margin-bottom: 28px;
+            max-width: 520px;
+            line-height: 1.7;
+            color: var(--dark-text);
+            opacity: 0.95;
         }
 
         .btn {
             display: inline-block;
             padding: 12px 28px;
-            background: var(--gradient);
-            color: white;
-            border: none;
-            border-radius: 8px;
+            background: transparent;
+            color: var(--primary);
+            border: 2px solid var(--primary);
+            border-radius: 4px;
             font-weight: 600;
             text-decoration: none;
             transition: var(--transition);
             cursor: pointer;
-            font-family: 'JetBrains Mono', monospace;
-            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
-            position: relative;
-            overflow: hidden;
+            font-family: 'Share Tech Mono', monospace;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            box-shadow: 0 0 20px var(--hud-glow);
         }
 
         .btn:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 25px rgba(16, 185, 129, 0.4);
-        }
-
-        .btn::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-            transition: 0.5s;
-        }
-
-        .btn:hover::after {
-            left: 100%;
+            background: var(--primary);
+            color: var(--dark-bg);
+            transform: translateY(-3px);
+            box-shadow: 0 0 30px var(--hud-glow);
         }
 
         .hero-animation {
@@ -229,145 +503,79 @@
             justify-content: center;
             align-items: center;
             position: relative;
-            height: 400px;
+            height: 380px;
+            perspective: 1000px;
         }
 
-        /* Terminal Animation */
+        /* 3D Terminal Panel */
+        .terminal-wrapper {
+            transform-style: preserve-3d;
+            transform: rotateY(-8deg) rotateX(2deg);
+            transition: transform 0.4s ease;
+        }
+
+        .terminal-wrapper:hover {
+            transform: rotateY(0deg) rotateX(0deg) translateZ(20px);
+        }
+
         .terminal {
             width: 100%;
-            max-width: 500px;
-            height: 350px;
-            background-color: var(--terminal-bg);
-            border-radius: 10px;
+            max-width: 480px;
+            height: 340px;
+            background: var(--terminal-bg);
+            border: 2px solid var(--primary);
+            border-radius: 8px;
             overflow: hidden;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
-            font-family: 'JetBrains Mono', monospace;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.5), 0 0 40px var(--hud-glow);
+            font-family: 'Share Tech Mono', monospace;
             position: relative;
             z-index: 2;
         }
 
         .terminal-header {
-            background-color: var(--terminal-header);
-            padding: 10px 15px;
+            background: var(--terminal-header);
+            padding: 10px 14px;
             display: flex;
             align-items: center;
-            border-bottom: 1px solid #30363d;
+            border-bottom: 1px solid var(--primary);
         }
 
-        .terminal-buttons {
-            display: flex;
-            gap: 8px;
-        }
-
+        .terminal-buttons { display: flex; gap: 6px; }
         .terminal-button {
-            width: 10px;
-            height: 10px;
+            width: 10px; height: 10px;
             border-radius: 50%;
         }
-
-        .terminal-button.close {
-            background-color: #ff5f56;
-        }
-
-        .terminal-button.minimize {
-            background-color: #ffbd2e;
-        }
-
-        .terminal-button.maximize {
-            background-color: #27c93f;
-        }
+        .terminal-button.close { background: #ff5f56; }
+        .terminal-button.minimize { background: #ffbd2e; }
+        .terminal-button.maximize { background: #27c93f; }
 
         .terminal-title {
-            color: #8b949e;
-            font-size: 0.8rem;
-            margin-left: 15px;
+            color: var(--primary);
+            font-size: 0.75rem;
+            margin-left: 14px;
+            opacity: 0.9;
         }
 
         .terminal-body {
-            padding: 15px;
-            height: calc(100% - 40px);
+            padding: 14px;
+            height: calc(100% - 42px);
             overflow-y: auto;
-            font-size: 0.85rem;
+            font-size: 0.82rem;
         }
 
-        .terminal-line {
-            margin-bottom: 6px;
-            display: flex;
-            align-items: flex-start;
-        }
-
-        .terminal-prompt {
-            color: var(--primary);
-            margin-right: 8px;
-            font-weight: 600;
-        }
-
+        .terminal-line { margin-bottom: 6px; display: flex; align-items: flex-start; }
+        .terminal-prompt { color: var(--primary); margin-right: 8px; font-weight: 600; }
         .terminal-command {
             color: var(--terminal-text);
             white-space: nowrap;
             overflow: hidden;
             border-right: 2px solid var(--terminal-text);
-            animation: typing 3s steps(40, end), blink-caret 0.75s step-end infinite;
         }
+        .terminal-output { color: #8b9cad; margin-left: 12px; line-height: 1.4; }
 
-        .terminal-output {
-            color: #c9d1d9;
-            margin-left: 15px;
-            line-height: 1.4;
-        }
-
-        @keyframes typing {
-            from { width: 0 }
-            to { width: 100% }
-        }
-
-        @keyframes blink-caret {
-            from, to { border-color: transparent }
-            50% { border-color: var(--terminal-text) }
-        }
-
-        /* Background DevOps Tools */
-        .background-tools {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: -1;
-            overflow: hidden;
-        }
-
-        .bg-tool {
-            position: absolute;
-            font-size: 3rem;
-            opacity: 0.1;
-            color: var(--primary);
-            animation: float-bg 20s infinite linear;
-        }
-
-        .bg-tool.jenkins { top: 10%; left: 5%; animation-delay: 0s; }
-        .bg-tool.kubernetes { top: 20%; right: 10%; animation-delay: 2s; }
-        .bg-tool.docker { top: 60%; left: 8%; animation-delay: 4s; }
-        .bg-tool.terraform { bottom: 20%; right: 5%; animation-delay: 6s; }
-        .bg-tool.grafana { top: 40%; right: 15%; animation-delay: 8s; }
-        .bg-tool.aws { bottom: 30%; left: 15%; animation-delay: 10s; }
-        .bg-tool.loki { top: 15%; right: 20%; animation-delay: 12s; }
-        .bg-tool.prometheus { bottom: 15%; right: 25%; animation-delay: 14s; }
-        .bg-tool.ansible { top: 70%; right: 10%; animation-delay: 16s; }
-        .bg-tool.git { top: 30%; left: 20%; animation-delay: 18s; }
-
-        @keyframes float-bg {
-            0% { transform: translateY(0) translateX(0) rotate(0deg); }
-            25% { transform: translateY(-20px) translateX(10px) rotate(5deg); }
-            50% { transform: translateY(-40px) translateX(-10px) rotate(0deg); }
-            75% { transform: translateY(-20px) translateX(-15px) rotate(-5deg); }
-            100% { transform: translateY(0) translateX(0) rotate(0deg); }
-        }
-
-        /* Section Styles */
+        /* ——— SECTIONS AS LEVELS ——— */
         section {
-            padding: 80px 0;
+            padding: 90px 0;
             position: relative;
             overflow: hidden;
         }
@@ -375,29 +583,36 @@
         .section-title {
             text-align: center;
             margin-bottom: 50px;
-            position: relative;
+        }
+
+        .section-title .level-tag {
+            display: inline-block;
+            font-size: 0.7rem;
+            color: var(--primary);
+            letter-spacing: 4px;
+            margin-bottom: 10px;
+            text-transform: uppercase;
         }
 
         .section-title h2 {
-            font-size: 2rem;
-            display: inline-block;
-            position: relative;
+            font-size: 1.9rem;
+            font-family: 'Orbitron', sans-serif;
+            color: #fff;
             font-weight: 700;
+            text-shadow: 0 0 20px var(--hud-glow);
         }
 
         .section-title h2::after {
             content: '';
-            position: absolute;
-            bottom: -12px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 60px;
-            height: 4px;
-            background: var(--gradient);
-            border-radius: 2px;
+            display: block;
+            width: 80px;
+            height: 3px;
+            background: var(--primary);
+            margin: 12px auto 0;
+            box-shadow: 0 0 15px var(--hud-glow);
         }
 
-        /* Experience Section */
+        /* ——— LEVEL 1: PIPELINE (Experience) ——— */
         .timeline {
             position: relative;
             max-width: 1000px;
@@ -407,21 +622,21 @@
         .timeline::before {
             content: '';
             position: absolute;
-            top: 0;
-            bottom: 0;
+            top: 0; bottom: 0;
             left: 50%;
-            width: 4px;
-            background: var(--gradient);
+            width: 3px;
+            background: linear-gradient(180deg, var(--primary), var(--accent));
             transform: translateX(-50%);
+            box-shadow: 0 0 20px var(--hud-glow);
         }
 
         .timeline-item {
-            padding: 25px 30px;
+            padding: 24px 28px;
             position: relative;
             width: 50%;
             box-sizing: border-box;
             opacity: 0;
-            transform: translateY(50px);
+            transform: translateY(40px);
             transition: all 0.6s ease;
         }
 
@@ -430,212 +645,189 @@
             transform: translateY(0);
         }
 
-        .timeline-item:nth-child(odd) {
-            left: 0;
-            padding-right: 50px;
-        }
-
-        .timeline-item:nth-child(even) {
-            left: 50%;
-            padding-left: 50px;
-        }
+        .timeline-item:nth-child(odd) { left: 0; padding-right: 50px; }
+        .timeline-item:nth-child(even) { left: 50%; padding-left: 50px; }
 
         .timeline-content {
-            padding: 25px;
-            background-color: var(--light-surface);
-            border-radius: 12px;
-            box-shadow: var(--shadow);
+            padding: 24px;
+            background: var(--game-panel);
+            border: 1px solid rgba(0, 255, 136, 0.3);
+            border-radius: 8px;
             transition: var(--transition);
             position: relative;
             overflow: hidden;
-        }
-
-        body.dark-mode .timeline-content {
-            background-color: var(--dark-surface);
+            backdrop-filter: blur(8px);
         }
 
         .timeline-content:hover {
-            transform: translateY(-8px);
-            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
+            transform: translateY(-6px);
+            border-color: var(--primary);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.4), 0 0 25px var(--hud-glow);
         }
 
         .timeline-content::before {
             content: '';
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 5px;
+            top: 0; left: 0;
+            width: 4px;
             height: 100%;
-            background: var(--gradient);
+            background: var(--primary);
+            box-shadow: 0 0 15px var(--hud-glow);
         }
 
         .timeline-item::after {
             content: '';
             position: absolute;
-            top: 35px;
-            width: 20px;
-            height: 20px;
-            background: var(--gradient);
+            top: 32px;
+            width: 16px; height: 16px;
+            background: var(--primary);
             border-radius: 50%;
-            box-shadow: 0 0 0 5px var(--light-bg);
+            box-shadow: 0 0 0 4px var(--dark-bg), 0 0 20px var(--hud-glow);
             z-index: 1;
         }
 
-        body.dark-mode .timeline-item::after {
-            box-shadow: 0 0 0 5px var(--dark-bg);
-        }
-
-        .timeline-item:nth-child(odd)::after {
-            right: -10px;
-        }
-
-        .timeline-item:nth-child(even)::after {
-            left: -10px;
-        }
+        .timeline-item:nth-child(odd)::after { right: -8px; }
+        .timeline-item:nth-child(even)::after { left: -8px; }
 
         .timeline-date {
             font-weight: 600;
             color: var(--primary);
-            margin-bottom: 8px;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.85rem;
+            margin-bottom: 6px;
+            font-size: 0.8rem;
+            letter-spacing: 1px;
         }
 
         .timeline-company {
             font-weight: 700;
-            margin-bottom: 5px;
-            font-size: 1.1rem;
+            margin-bottom: 4px;
+            font-size: 1.05rem;
+            color: #fff;
         }
 
         .timeline-role {
             font-style: italic;
             margin-bottom: 12px;
-            color: var(--secondary);
+            color: var(--accent);
             font-weight: 500;
+            font-size: 0.9rem;
         }
 
-        .timeline-content ul {
-            list-style-type: none;
-        }
-
+        .timeline-content ul { list-style-type: none; }
         .timeline-content li {
             margin-bottom: 8px;
             padding-left: 18px;
             position: relative;
-            font-size: 0.95rem;
+            font-size: 0.9rem;
+            color: var(--dark-text);
         }
-
         .timeline-content li::before {
-            content: '▹';
+            content: '>';
             position: absolute;
             left: 0;
             color: var(--primary);
+            font-weight: 700;
         }
 
-        /* Skills Section */
+        /* ——— LEVEL 2: LOADOUT (Skills / DevOps Tools) ——— */
         .skills-container {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-            gap: 25px;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 24px;
+            perspective: 1200px;
         }
 
         .skill-category {
-            background-color: var(--light-surface);
-            border-radius: 12px;
-            padding: 25px;
-            box-shadow: var(--shadow);
+            background: var(--game-panel);
+            border: 1px solid rgba(0, 255, 136, 0.25);
+            border-radius: 8px;
+            padding: 24px;
             transition: var(--transition);
             position: relative;
             overflow: hidden;
-        }
-
-        body.dark-mode .skill-category {
-            background-color: var(--dark-surface);
+            transform-style: preserve-3d;
+            backdrop-filter: blur(8px);
         }
 
         .skill-category:hover {
-            transform: translateY(-8px);
-            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
+            transform: translateY(-8px) rotateX(2deg);
+            border-color: var(--primary);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4), 0 0 30px var(--hud-glow);
         }
 
         .skill-category::before {
             content: '';
             position: absolute;
-            top: 0;
-            left: 0;
+            top: 0; left: 0;
             width: 100%;
-            height: 5px;
-            background: var(--gradient);
+            height: 4px;
+            background: var(--primary);
+            box-shadow: 0 0 15px var(--hud-glow);
         }
 
         .skill-category h3 {
-            margin-bottom: 18px;
+            margin-bottom: 16px;
             color: var(--primary);
             display: flex;
             align-items: center;
             gap: 10px;
             font-weight: 600;
-            font-size: 1.1rem;
+            font-size: 1rem;
+            font-family: 'Orbitron', sans-serif;
         }
 
-        .skill-list {
-            list-style-type: none;
-        }
-
+        .skill-list { list-style-type: none; }
         .skill-list li {
             margin-bottom: 10px;
-            padding-left: 22px;
+            padding-left: 20px;
             position: relative;
             transition: var(--transition);
-            font-size: 0.95rem;
+            font-size: 0.9rem;
         }
-
         .skill-list li:hover {
-            transform: translateX(5px);
+            transform: translateX(6px);
             color: var(--primary);
         }
-
         .skill-list li::before {
-            content: '>';
+            content: '$';
             position: absolute;
             left: 0;
             color: var(--primary);
-            font-family: 'JetBrains Mono', monospace;
             font-weight: 700;
         }
 
-        /* Projects Section */
+        /* ——— LEVEL 3: DEPLOYMENTS (Projects) ——— */
         .projects-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 25px;
+            gap: 28px;
+            perspective: 1200px;
         }
 
         .project-card {
-            background-color: var(--light-surface);
-            border-radius: 12px;
+            background: var(--game-panel);
+            border: 1px solid rgba(0, 255, 136, 0.25);
+            border-radius: 8px;
             overflow: hidden;
-            box-shadow: var(--shadow);
             transition: var(--transition);
             position: relative;
-        }
-
-        body.dark-mode .project-card {
-            background-color: var(--dark-surface);
+            transform-style: preserve-3d;
+            backdrop-filter: blur(8px);
         }
 
         .project-card:hover {
-            transform: translateY(-10px);
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+            transform: translateY(-10px) rotateY(3deg);
+            border-color: var(--primary);
+            box-shadow: 0 25px 50px rgba(0,0,0,0.4), 0 0 35px var(--hud-glow);
         }
 
         .project-image {
-            height: 180px;
-            background: var(--gradient);
+            height: 160px;
+            background: linear-gradient(135deg, rgba(0, 255, 136, 0.15), rgba(0, 204, 106, 0.1));
+            border-bottom: 2px solid var(--primary);
             display: flex;
             align-items: center;
             justify-content: center;
-            color: white;
+            color: var(--primary);
             font-size: 2.5rem;
             position: relative;
             overflow: hidden;
@@ -644,259 +836,214 @@
         .project-image::after {
             content: '';
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.1);
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: linear-gradient(180deg, transparent 50%, rgba(0,0,0,0.3) 100%);
         }
 
-        .project-content {
-            padding: 20px;
-        }
-
+        .project-content { padding: 20px; }
         .project-content h3 {
-            margin-bottom: 12px;
+            margin-bottom: 10px;
             color: var(--primary);
             font-weight: 600;
-            font-size: 1.2rem;
+            font-size: 1.1rem;
+            font-family: 'Orbitron', sans-serif;
         }
-
         .project-content p {
-            margin-bottom: 18px;
+            margin-bottom: 16px;
             line-height: 1.6;
-            font-size: 0.95rem;
+            font-size: 0.9rem;
+            color: var(--dark-text);
         }
 
         .project-tech {
             display: flex;
             flex-wrap: wrap;
             gap: 8px;
-            margin-bottom: 18px;
+            margin-bottom: 16px;
         }
 
         .tech-tag {
-            background-color: var(--accent);
-            color: var(--dark-text);
-            padding: 5px 10px;
-            border-radius: 20px;
-            font-size: 0.75rem;
+            background: rgba(0, 255, 136, 0.15);
+            color: var(--primary);
+            padding: 5px 12px;
+            border: 1px solid rgba(0, 255, 136, 0.4);
+            border-radius: 4px;
+            font-size: 0.72rem;
             font-weight: 500;
-            font-family: 'JetBrains Mono', monospace;
         }
 
-        .project-links {
-            display: flex;
-            gap: 12px;
-        }
-
+        .project-links { display: flex; gap: 12px; }
         .project-link {
             display: inline-flex;
             align-items: center;
-            gap: 5px;
+            gap: 6px;
             color: var(--primary);
             text-decoration: none;
             font-weight: 500;
             transition: var(--transition);
-            font-size: 0.9rem;
+            font-size: 0.85rem;
         }
-
         .project-link:hover {
-            color: var(--secondary);
-            transform: translateX(5px);
+            color: var(--accent);
+            text-shadow: 0 0 10px var(--hud-glow);
+            transform: translateX(4px);
         }
 
-        /* Contact Section */
+        /* ——— LEVEL 4: TERMINAL (Contact) ——— */
         .contact-container {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 40px;
+            gap: 36px;
         }
 
-        .contact-info {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
+        .contact-info { display: flex; flex-direction: column; gap: 18px; }
 
         .contact-item {
             display: flex;
             align-items: center;
-            gap: 15px;
+            gap: 16px;
             padding: 18px;
-            background-color: var(--light-surface);
-            border-radius: 12px;
-            box-shadow: var(--shadow);
+            background: var(--game-panel);
+            border: 1px solid rgba(0, 255, 136, 0.25);
+            border-radius: 8px;
             transition: var(--transition);
-        }
-
-        body.dark-mode .contact-item {
-            background-color: var(--dark-surface);
+            backdrop-filter: blur(8px);
         }
 
         .contact-item:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            transform: translateY(-4px);
+            border-color: var(--primary);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3), 0 0 20px var(--hud-glow);
         }
 
         .contact-icon {
-            width: 50px;
-            height: 50px;
-            background: var(--gradient);
-            border-radius: 50%;
+            width: 48px;
+            height: 48px;
+            background: rgba(0, 255, 136, 0.15);
+            border: 1px solid var(--primary);
+            border-radius: 6px;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: white;
-            font-size: 1.3rem;
+            color: var(--primary);
+            font-size: 1.2rem;
             flex-shrink: 0;
         }
 
         .contact-details h3 {
-            margin-bottom: 5px;
+            margin-bottom: 4px;
             font-weight: 600;
-            font-size: 1.1rem;
+            font-size: 1rem;
+            color: #fff;
         }
+        .contact-details p { color: var(--dark-text); opacity: 0.9; font-size: 0.88rem; }
 
-        .contact-details p {
-            color: inherit;
-            opacity: 0.8;
-            font-size: 0.9rem;
-        }
-
-        .contact-form {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-
-        .form-group {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
+        .contact-form { display: flex; flex-direction: column; gap: 18px; }
+        .form-group { display: flex; flex-direction: column; gap: 6px; }
         .form-group label {
             font-weight: 500;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.85rem;
+            font-size: 0.82rem;
+            color: var(--primary);
+            letter-spacing: 1px;
         }
 
         .form-group input,
         .form-group textarea {
-            padding: 12px;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
+            padding: 12px 14px;
+            border: 1px solid rgba(0, 255, 136, 0.3);
+            border-radius: 6px;
             font-size: 0.95rem;
             transition: var(--transition);
-            background-color: var(--light-surface);
-            color: inherit;
-            font-family: 'Inter', sans-serif;
-        }
-
-        body.dark-mode .form-group input,
-        body.dark-mode .form-group textarea {
-            background-color: var(--dark-surface);
-            border-color: #333;
+            background: rgba(10, 30, 40, 0.6);
+            color: var(--dark-text);
+            font-family: 'Share Tech Mono', monospace;
         }
 
         .form-group input:focus,
         .form-group textarea:focus {
             outline: none;
             border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+            box-shadow: 0 0 0 2px var(--hud-glow);
         }
 
-        /* Footer */
+        /* Footer — HUD bottom bar */
         footer {
-            background-color: var(--dark-surface);
+            background: linear-gradient(0deg, rgba(5, 8, 16, 0.98), transparent);
+            border-top: 2px solid var(--primary);
             color: var(--dark-text);
-            padding: 50px 0 25px;
+            padding: 40px 0 24px;
             text-align: center;
-        }
-
-        body.dark-mode footer {
-            background-color: #111;
+            box-shadow: 0 -5px 30px var(--hud-glow);
         }
 
         .social-links {
             display: flex;
             justify-content: center;
-            gap: 15px;
-            margin-bottom: 25px;
+            gap: 16px;
+            margin-bottom: 20px;
         }
 
         .social-link {
-            width: 45px;
-            height: 45px;
-            background: var(--gradient);
-            border-radius: 50%;
+            width: 44px;
+            height: 44px;
+            background: transparent;
+            border: 1px solid var(--primary);
+            border-radius: 6px;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: white;
+            color: var(--primary);
             text-decoration: none;
             transition: var(--transition);
             font-size: 1.1rem;
         }
 
         .social-link:hover {
-            transform: translateY(-6px) rotate(10deg);
-            box-shadow: 0 10px 20px rgba(16, 185, 129, 0.3);
+            transform: translateY(-4px);
+            box-shadow: 0 0 25px var(--hud-glow);
+            background: rgba(0, 255, 136, 0.15);
         }
 
         .copyright {
-            font-size: 0.85rem;
-            opacity: 0.8;
-            margin-top: 15px;
-            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            opacity: 0.85;
+            margin-top: 12px;
+            letter-spacing: 1px;
         }
 
-        /* Mobile Navigation */
+        /* Mobile Nav — Game menu */
         .mobile-nav {
             position: fixed;
             top: 0;
             right: -100%;
             width: 80%;
+            max-width: 320px;
             height: 100vh;
-            background: var(--light-surface);
+            background: var(--game-panel);
+            border-left: 2px solid var(--primary);
             z-index: 2000;
             transition: var(--transition);
-            padding: 80px 30px 30px;
-            box-shadow: -5px 0 15px rgba(0,0,0,0.1);
+            padding: 80px 24px 24px;
+            backdrop-filter: blur(12px);
         }
 
-        body.dark-mode .mobile-nav {
-            background: var(--dark-surface);
-        }
+        .mobile-nav.active { right: 0; }
 
-        .mobile-nav.active {
-            right: 0;
-        }
-
-        .mobile-nav-links {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-
+        .mobile-nav-links { display: flex; flex-direction: column; gap: 8px; }
         .mobile-nav-links a {
             text-decoration: none;
-            color: inherit;
-            font-size: 1.2rem;
-            padding: 10px 0;
-            border-bottom: 1px solid #eee;
-            font-family: 'JetBrains Mono', monospace;
+            color: var(--dark-text);
+            font-size: 1rem;
+            padding: 12px 14px;
+            border: 1px solid rgba(0, 255, 136, 0.3);
+            border-radius: 6px;
             transition: var(--transition);
         }
-
-        body.dark-mode .mobile-nav-links a {
-            border-bottom: 1px solid #333;
-        }
-
         .mobile-nav-links a:hover {
             color: var(--primary);
-            padding-left: 10px;
+            border-color: var(--primary);
+            box-shadow: 0 0 15px var(--hud-glow);
         }
 
         .close-mobile-nav {
@@ -904,29 +1051,25 @@
             top: 20px;
             right: 20px;
             background: none;
-            border: none;
-            font-size: 1.5rem;
-            color: inherit;
+            border: 1px solid var(--primary);
+            color: var(--primary);
+            font-size: 1.2rem;
             cursor: pointer;
+            padding: 6px 10px;
+            border-radius: 4px;
         }
 
         .overlay {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.5);
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7);
             z-index: 1500;
             opacity: 0;
             visibility: hidden;
             transition: var(--transition);
         }
-
-        .overlay.active {
-            opacity: 1;
-            visibility: visible;
-        }
+        .overlay.active { opacity: 1; visibility: visible; }
 
         /* Responsive Design */
         @media (max-width: 992px) {
@@ -936,83 +1079,49 @@
                 gap: 40px;
                 padding-top: 80px;
             }
-            
-            .hero h1 {
-                font-size: 2.2rem;
+            .hero-inner {
+                flex-direction: column;
             }
-            
-            .hero-animation {
-                height: 300px;
+            .hero-character {
+                order: 0;
+                margin: 0 auto;
             }
-            
-            .terminal {
-                height: 300px;
-                max-width: 100%;
+            .hero-content { order: 1; }
+            .hero-animation { order: 2; height: 300px; }
+            .hero h1 { font-size: 2.2rem; }
+            .terminal { height: 300px; max-width: 100%; }
+            .terminal-wrapper { transform: none; }
+            .game-hud {
+                flex-wrap: wrap;
+                gap: 10px;
+                padding: 8px 12px;
+                bottom: 12px;
+                left: 12px;
             }
-            
-            .timeline::before {
-                left: 25px;
-            }
-            
-            .timeline-item {
-                width: 100%;
-                padding-left: 60px;
-                padding-right: 20px;
-            }
-            
-            .timeline-item:nth-child(even) {
-                left: 0;
-            }
-            
-            .timeline-item::after {
-                left: 15px !important;
-            }
-            
-            .bg-tool {
-                font-size: 2.5rem;
-            }
+            .game-hud-item span { display: none; }
+            .timeline::before { left: 25px; }
+            .timeline-item { width: 100%; padding-left: 60px; padding-right: 20px; }
+            .timeline-item:nth-child(even) { left: 0; }
+            .timeline-item::after { left: 15px !important; }
         }
 
         @media (max-width: 768px) {
-            .nav-links {
-                display: none;
-            }
-            
-            .mobile-menu-btn {
-                display: block;
-            }
-            
-            .hero h1 {
-                font-size: 1.8rem;
-            }
-            
-            .hero p {
-                font-size: 1rem;
-            }
-            
-            .section-title h2 {
-                font-size: 1.7rem;
-            }
-            
-            .projects-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .skills-container {
-                grid-template-columns: 1fr;
-            }
-            
-            .contact-container {
-                grid-template-columns: 1fr;
-            }
-            
-            .bg-tool {
-                font-size: 2rem;
-            }
-            
-            .terminal-body {
-                font-size: 0.75rem;
-            }
+            .nav-links { display: none; }
+            .mobile-menu-btn { display: block; }
+            .hero h1 { font-size: 1.8rem; }
+            .hero p { font-size: 1rem; }
+            .hero-character { width: 100px; height: 140px; }
+            .character-body { width: 60px; height: 75px; font-size: 1.2rem; }
+            .character-head { width: 40px; height: 40px; bottom: 72px; font-size: 1rem; }
+            .section-title h2 { font-size: 1.7rem; }
+            .pipeline-visual { gap: 4px; }
+            .pipeline-node { width: 40px; height: 40px; font-size: 1rem; }
+            .pipeline-node span { font-size: 0.5rem; }
+            .projects-grid { grid-template-columns: 1fr; }
+            .skills-container { grid-template-columns: 1fr; }
+            .contact-container { grid-template-columns: 1fr; }
+            .terminal-body { font-size: 0.75rem; }
+            .game-hud { font-size: 0.65rem; }
         }
 
         @media (max-width: 480px) {
@@ -1039,10 +1148,6 @@
             .skill-category {
                 padding: 20px;
             }
-            
-            .bg-tool {
-                font-size: 1.5rem;
-            }
         }
 
         /* Scroll Animation */
@@ -1059,19 +1164,16 @@
     </style>
 </head>
 <body>
-    <!-- Background DevOps Tools -->
-    <div class="background-tools">
-        <div class="bg-tool jenkins"><i class="fab fa-jenkins"></i></div>
-        <div class="bg-tool kubernetes"><i class="fas fa-cubes"></i></div>
-        <div class="bg-tool docker"><i class="fab fa-docker"></i></div>
-        <div class="bg-tool terraform"><i class="fas fa-cloud"></i></div>
-        <div class="bg-tool grafana"><i class="fas fa-chart-line"></i></div>
-        <div class="bg-tool aws"><i class="fab fa-aws"></i></div>
-        <div class="bg-tool loki"><i class="fas fa-search"></i></div>
-        <div class="bg-tool prometheus"><i class="fas fa-database"></i></div>
-        <div class="bg-tool ansible"><i class="fas fa-cog"></i></div>
-        <div class="bg-tool git"><i class="fab fa-git-alt"></i></div>
+    <!-- Custom cursor = your character (follows mouse) -->
+    <div class="custom-cursor hidden" id="customCursor" aria-hidden="true">
+        <div class="cursor-character">
+            <div class="cursor-head"><i class="fas fa-user-astronaut"></i></div>
+            <div class="cursor-body"><i class="fas fa-terminal"></i></div>
+        </div>
     </div>
+
+    <!-- 3D Scene (DevOps-themed) -->
+    <canvas id="canvas3d"></canvas>
 
     <!-- Mobile Navigation Overlay -->
     <div class="overlay" id="overlay"></div>
@@ -1082,12 +1184,22 @@
             <i class="fas fa-times"></i>
         </button>
         <nav class="mobile-nav-links">
-            <a href="#home">Home</a>
-            <a href="#experience">Experience</a>
-            <a href="#skills">Skills</a>
-            <a href="#projects">Projects</a>
-            <a href="#contact">Contact</a>
+            <a href="#home"><i class="fas fa-play"></i> Mission</a>
+            <a href="#experience"><i class="fas fa-code-branch"></i> Pipeline</a>
+            <a href="#skills"><i class="fas fa-toolbox"></i> Loadout</a>
+            <a href="#projects"><i class="fas fa-rocket"></i> Deploy</a>
+            <a href="#contact"><i class="fas fa-terminal"></i> Terminal</a>
         </nav>
+    </div>
+
+    <!-- Game World HUD (Player Stats) -->
+    <div class="game-hud" aria-hidden="true">
+        <div class="game-hud-avatar" title="You">VK</div>
+        <div class="game-hud-item"><i class="fas fa-user"></i><span>Player</span><strong>Vikash</strong></div>
+        <div class="game-hud-item"><i class="fas fa-layer-group"></i><span>Level</span><strong>4</strong></div>
+        <div class="game-hud-item"><i class="fas fa-heartbeat"></i><span>Uptime</span><strong>99.9%</strong></div>
+        <div class="game-hud-item"><i class="fas fa-code-branch"></i><span>Pipelines Fixed</span><strong>12+</strong></div>
+        <div class="game-hud-item"><i class="fas fa-cubes"></i><span>Infra Provisioned</span><strong>∞</strong></div>
     </div>
 
     <!-- Header -->
@@ -1095,30 +1207,37 @@
         <div class="container header-content">
             <div class="logo">Vikash Kumar</div>
             <nav class="nav-links">
-                <a href="#home">Home</a>
-                <a href="#experience">Experience</a>
-                <a href="#skills">Skills</a>
-                <a href="#projects">Projects</a>
-                <a href="#contact">Contact</a>
+                <a href="#home"><i class="fas fa-play"></i> Mission</a>
+                <a href="#experience"><i class="fas fa-code-branch"></i> Pipeline</a>
+                <a href="#skills"><i class="fas fa-toolbox"></i> Loadout</a>
+                <a href="#projects"><i class="fas fa-rocket"></i> Deploy</a>
+                <a href="#contact"><i class="fas fa-terminal"></i> Terminal</a>
             </nav>
-            <button class="theme-toggle" id="themeToggle">
-                <i class="fas fa-moon"></i>
-            </button>
             <button class="mobile-menu-btn" id="mobileMenuBtn">
                 <i class="fas fa-bars"></i>
             </button>
         </div>
     </header>
 
-    <!-- Hero Section -->
+    <!-- Hero: Your World — You as Character -->
     <section class="hero" id="home">
-        <div class="container" style="display: flex; align-items: center; gap: 30px; flex-wrap: wrap;">
-            <div class="hero-content">
-                <h1>DevOps Engineer & <span>Cloud Specialist</span></h1>
-                <p>Passionate about automation and continuously seeking opportunities to learn and enhance my skills. Specializing in CI/CD, cloud infrastructure, and microservices architecture.</p>
-                <a href="#contact" class="btn">Get In Touch</a>
-            </div>
-            <div class="hero-animation">
+        <div class="container">
+            <p class="zone-banner" style="margin-bottom: 20px;"><i class="fas fa-globe"></i> Welcome to Vikash's World — DevOps Engineer Quest</p>
+            <div class="hero-inner">
+                <div class="hero-content">
+                    <span class="hero-badge">Mission 0 — Spawn Point (Command Center)</span>
+                    <h1>You are the <span>DevOps Engineer</span></h1>
+                    <p>In this world you fix pipelines, provision infrastructure, and deploy with Jenkins, Terraform, Kubernetes & Docker. Your character levels up through automation.</p>
+                    <a href="#experience" class="btn">Enter Zone 1 — Fix the Pipeline</a>
+                </div>
+                <div class="hero-character" id="heroCharacter" title="Drag me anywhere!">
+                    <div class="character-head"><i class="fas fa-user-astronaut"></i></div>
+                    <div class="character-body"><i class="fas fa-terminal"></i></div>
+                    <span class="character-label">Vikash — DevOps</span>
+                    <span class="drag-hint">Drag me!</span>
+                </div>
+                <div class="hero-animation">
+                    <div class="terminal-wrapper">
                 <div class="terminal">
                     <div class="terminal-header">
                         <div class="terminal-buttons">
@@ -1126,7 +1245,7 @@
                             <div class="terminal-button minimize"></div>
                             <div class="terminal-button maximize"></div>
                         </div>
-                        <div class="terminal-title">bash — 80×24</div>
+                        <div class="terminal-title">devops@portfolio — kubectl / docker / terraform</div>
                     </div>
                     <div class="terminal-body">
                         <div class="terminal-line">
@@ -1160,16 +1279,30 @@
                         </div>
                     </div>
                 </div>
+                    </div>
+                </div>
             </div>
         </div>
     </section>
 
-    <!-- Experience Section -->
-    <section id="experience">
+    <!-- Zone 1: Jenkins Pipeline Valley (Experience) -->
+    <section id="experience" class="game-zone">
         <div class="container">
+            <p class="zone-banner"><i class="fab fa-jenkins"></i> Zone 1 — Jenkins Pipeline Valley</p>
             <div class="section-title">
+                <span class="level-tag">Mission: Fix the Pipeline</span>
                 <h2>Professional Experience</h2>
             </div>
+            <div class="pipeline-visual" id="pipelineVisual">
+                <div class="pipeline-stage"><div class="pipeline-node fixed" title="Build"><i class="fas fa-hammer"></i><span>Build</span></div></div>
+                <div class="pipeline-connector fixed"></div>
+                <div class="pipeline-stage"><div class="pipeline-node fixed" title="Test"><i class="fas fa-vial"></i><span>Test</span></div></div>
+                <div class="pipeline-connector fixed"></div>
+                <div class="pipeline-stage"><div class="pipeline-node fixed" title="Deploy"><i class="fab fa-docker"></i><span>Deploy</span></div></div>
+                <div class="pipeline-connector fixed"></div>
+                <div class="pipeline-stage"><div class="pipeline-node fixed" title="Monitor"><i class="fas fa-chart-line"></i><span>Monitor</span></div></div>
+            </div>
+            <p style="text-align: center; font-size: 0.8rem; color: var(--accent); margin-bottom: 24px;">Pipeline status: <strong style="color: var(--primary);">All stages passing ✓</strong></p>
             <div class="timeline">
                 <div class="timeline-item">
                     <div class="timeline-content">
@@ -1214,15 +1347,26 @@
         </div>
     </section>
 
-    <!-- Skills Section -->
-    <section id="skills">
+    <!-- Zone 2: Terraform Provisioning Bay (Skills) -->
+    <section id="skills" class="game-zone">
         <div class="container">
+            <p class="zone-banner"><i class="fas fa-cloud"></i> Zone 2 — Terraform Provisioning Bay (Loadout)</p>
             <div class="section-title">
-                <h2>Technical Skills</h2>
+                <span class="level-tag">Mission: Provision Infrastructure</span>
+                <h2>DevOps & Technical Skills</h2>
             </div>
+            <div class="terraform-visual">
+                <div class="tf-block"></div>
+                <div class="tf-block"></div>
+                <div class="tf-block"></div>
+                <div class="tf-block"></div>
+                <div class="tf-block"></div>
+                <div class="tf-block"></div>
+            </div>
+            <p class="terraform-label">terraform apply — Infrastructure as Code</p>
             <div class="skills-container">
                 <div class="skill-category fade-in">
-                    <h3><i class="fas fa-code"></i> Languages & Scripting</h3>
+                    <h3><i class="fab fa-python"></i> Languages & Scripting</h3>
                     <ul class="skill-list">
                         <li>Python</li>
                         <li>Bash/Shell Scripting</li>
@@ -1232,7 +1376,7 @@
                     </ul>
                 </div>
                 <div class="skill-category fade-in">
-                    <h3><i class="fas fa-cloud"></i> Cloud Platforms</h3>
+                    <h3><i class="fab fa-aws"></i> Cloud & Containers</h3>
                     <ul class="skill-list">
                         <li>Amazon Web Services (AWS)</li>
                         <li>Google Cloud Platform (GCP)</li>
@@ -1242,7 +1386,7 @@
                     </ul>
                 </div>
                 <div class="skill-category fade-in">
-                    <h3><i class="fas fa-tools"></i> DevOps Tools</h3>
+                    <h3><i class="fab fa-jenkins"></i> CI/CD & DevOps Tools</h3>
                     <ul class="skill-list">
                         <li>Jenkins</li>
                         <li>GitHub Actions</li>
@@ -1251,8 +1395,8 @@
                         <li>SonarQube, Grafana, EFK Stack More.</li>
                     </ul>
                 </div>
-				<div class="skill-category fade-in">
-                    <h3><i class="fas fa-brain"></i> Areas of Interest</h3>
+                <div class="skill-category fade-in">
+                    <h3><i class="fas fa-shield-alt"></i> Security & Interest</h3>
                     <ul class="skill-list">
                         <li>Cyber Security</li>
                         <li>Bug Bounty</li>
@@ -1265,10 +1409,12 @@
         </div>
     </section>
 
-    <!-- Projects Section -->
-    <section id="projects">
+    <!-- Zone 3: Kubernetes Deployment Cluster (Projects) -->
+    <section id="projects" class="game-zone">
         <div class="container">
+            <p class="zone-banner"><i class="fas fa-cubes"></i> Zone 3 — Kubernetes Deployment Cluster</p>
             <div class="section-title">
+                <span class="level-tag">Mission: Deploy to Production</span>
                 <h2>Projects</h2>
             </div>
             <div class="projects-grid">
@@ -1335,10 +1481,12 @@
         </div>
     </section>
 
-    <!-- Contact Section -->
-    <section id="contact">
+    <!-- Zone 4: Terminal Outpost (Contact) -->
+    <section id="contact" class="game-zone">
         <div class="container">
+            <p class="zone-banner"><i class="fas fa-terminal"></i> Zone 4 — Terminal Outpost</p>
             <div class="section-title">
+                <span class="level-tag">Mission: Open a Channel</span>
                 <h2>Get In Touch</h2>
             </div>
             <div class="contact-container">
@@ -1408,35 +1556,127 @@
                     <i class="fas fa-envelope"></i>
                 </a>
             </div>
-            <p class="copyright">© 2023 Vikash Kumar. All Rights Reserved.</p>
+            <p class="copyright">© 2025 Vikash Kumar — DevOps Engineer. All Rights Reserved.</p>
         </div>
     </footer>
 
     <script>
-        // Theme Toggle
-        const themeToggle = document.getElementById('themeToggle');
-        const themeIcon = themeToggle.querySelector('i');
-        
-        themeToggle.addEventListener('click', () => {
-            document.body.classList.toggle('dark-mode');
-            
-            if (document.body.classList.contains('dark-mode')) {
-                themeIcon.classList.remove('fa-moon');
-                themeIcon.classList.add('fa-sun');
-                localStorage.setItem('theme', 'dark');
-            } else {
-                themeIcon.classList.remove('fa-sun');
-                themeIcon.classList.add('fa-moon');
-                localStorage.setItem('theme', 'light');
-            }
-        });
+        // ——— Custom user cursor (follows mouse) ———
+        (function initCustomCursor() {
+            const cursor = document.getElementById('customCursor');
+            if (!cursor) return;
 
-        // Check for saved theme preference
-        if (localStorage.getItem('theme') === 'dark') {
-            document.body.classList.add('dark-mode');
-            themeIcon.classList.remove('fa-moon');
-            themeIcon.classList.add('fa-sun');
-        }
+            let mouseX = -100, mouseY = -100;
+            let cursorX = -100, cursorY = -100;
+            let visible = false;
+            let isTouch = false;
+
+            document.addEventListener('mousemove', function(e) {
+                mouseX = e.clientX;
+                mouseY = e.clientY;
+                if (!visible && !isTouch) {
+                    cursor.classList.remove('hidden');
+                    document.body.classList.add('custom-cursor-active');
+                    visible = true;
+                    cursorX = mouseX;
+                    cursorY = mouseY;
+                }
+            });
+
+            document.addEventListener('mouseleave', function() {
+                cursor.classList.add('hidden');
+                document.body.classList.remove('custom-cursor-active');
+                visible = false;
+            });
+
+            document.addEventListener('touchstart', function() {
+                isTouch = true;
+                cursor.classList.add('hidden');
+                document.body.classList.remove('custom-cursor-active');
+                visible = false;
+            }, { passive: true });
+
+            document.querySelectorAll('a, button, [role="button"], .hero-character').forEach(function(el) {
+                el.addEventListener('mouseenter', function() { cursor.classList.add('hover'); });
+                el.addEventListener('mouseleave', function() { cursor.classList.remove('hover'); });
+            });
+
+            function animate() {
+                cursorX += (mouseX - cursorX) * 0.2;
+                cursorY += (mouseY - cursorY) * 0.2;
+                cursor.style.left = cursorX + 'px';
+                cursor.style.top = cursorY + 'px';
+                requestAnimationFrame(animate);
+            }
+            animate();
+        })();
+
+        // ——— Draggable Character ———
+        (function initDraggableCharacter() {
+            const character = document.getElementById('heroCharacter');
+            if (!character) return;
+
+            let isDragging = false;
+            let startX = 0, startY = 0;
+            let offsetX = 0, offsetY = 0;
+            let placeholder = null;
+
+            function getClient(e) {
+                if (e.touches && e.touches.length) return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+                return { x: e.clientX, y: e.clientY };
+            }
+
+            function startDrag(e) {
+                if (e.button && e.button !== 0) return;
+                e.preventDefault();
+                const client = getClient(e);
+                const rect = character.getBoundingClientRect();
+                offsetX = client.x - rect.left;
+                offsetY = client.y - rect.top;
+                isDragging = true;
+                character.classList.add('dragging');
+                character.style.left = rect.left + 'px';
+                character.style.top = rect.top + 'px';
+                character.style.transform = 'none';
+                placeholder = document.createElement('div');
+                placeholder.className = 'character-placeholder';
+                placeholder.style.width = rect.width + 'px';
+                placeholder.style.height = rect.height + 'px';
+                character.parentNode.insertBefore(placeholder, character);
+                document.addEventListener('mousemove', onMove);
+                document.addEventListener('mouseup', onEnd);
+                document.addEventListener('touchmove', onMove, { passive: false });
+                document.addEventListener('touchend', onEnd);
+            }
+
+            function onMove(e) {
+                if (!isDragging) return;
+                e.preventDefault();
+                const client = getClient(e);
+                let left = client.x - offsetX;
+                let top = client.y - offsetY;
+                const w = character.offsetWidth;
+                const h = character.offsetHeight;
+                left = Math.max(0, Math.min(left, window.innerWidth - w));
+                top = Math.max(0, Math.min(top, window.innerHeight - h));
+                character.style.left = left + 'px';
+                character.style.top = top + 'px';
+            }
+
+            function onEnd() {
+                if (!isDragging) return;
+                isDragging = false;
+                document.removeEventListener('mousemove', onMove);
+                document.removeEventListener('mouseup', onEnd);
+                document.removeEventListener('touchmove', onMove);
+                document.removeEventListener('touchend', onEnd);
+                if (placeholder && placeholder.parentNode) placeholder.parentNode.removeChild(placeholder);
+                placeholder = null;
+            }
+
+            character.addEventListener('mousedown', startDrag);
+            character.addEventListener('touchstart', startDrag, { passive: true });
+        })();
 
         // Mobile Navigation
         const mobileMenuBtn = document.getElementById('mobileMenuBtn');
@@ -1566,6 +1806,92 @@
         window.addEventListener('load', () => {
             setTimeout(animateTerminal, 1000);
         });
+
+        // ——— Three.js 3D Scene (DevOps-themed) ———
+        (function init3D() {
+            const canvas = document.getElementById('canvas3d');
+            if (!canvas || typeof THREE === 'undefined') return;
+            const scene = new THREE.Scene();
+            const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            camera.position.z = 30;
+
+            // DevOps green ambient
+            scene.fog = new THREE.FogExp2(0x050810, 0.028);
+            const ambientLight = new THREE.AmbientLight(0x0a1a0a);
+            scene.add(ambientLight);
+            const pointLight = new THREE.PointLight(0x00ff88, 0.6, 80);
+            pointLight.position.set(10, 10, 20);
+            scene.add(pointLight);
+
+            // Floating 3D shapes (cubes = containers, torus = pipeline, etc.)
+            const geometryTypes = [
+                { g: new THREE.BoxGeometry(2, 2, 2), name: 'container' },
+                { g: new THREE.TorusGeometry(1.5, 0.4, 8, 24), name: 'pipeline' },
+                { g: new THREE.OctahedronGeometry(1.5, 0), name: 'cluster' },
+                { g: new THREE.TetrahedronGeometry(1.8, 0), name: 'node' }
+            ];
+            const meshes = [];
+            geometryTypes.forEach((obj, i) => {
+                const mat = new THREE.MeshPhongMaterial({
+                    color: 0x00ff88,
+                    emissive: 0x003320,
+                    shininess: 80,
+                    transparent: true,
+                    opacity: 0.25
+                });
+                const mesh = new THREE.Mesh(obj.g, mat);
+                mesh.position.set((i - 2) * 8, (i % 2 === 0 ? 1 : -1) * 6, -25 - i * 5);
+                mesh.userData.speed = 0.2 + Math.random() * 0.3;
+                mesh.userData.axis = i % 2 === 0 ? 'y' : 'x';
+                scene.add(mesh);
+                meshes.push(mesh);
+            });
+
+            // Extra small cubes (microservices)
+            for (let j = 0; j < 12; j++) {
+                const g = new THREE.BoxGeometry(0.6, 0.6, 0.6);
+                const m = new THREE.MeshPhongMaterial({
+                    color: 0x00cc6a,
+                    emissive: 0x002210,
+                    transparent: true,
+                    opacity: 0.2
+                });
+                const mesh = new THREE.Mesh(g, m);
+                mesh.position.set(
+                    (Math.random() - 0.5) * 50,
+                    (Math.random() - 0.5) * 40,
+                    -40 - Math.random() * 30
+                );
+                mesh.userData.speed = 0.15 + Math.random() * 0.2;
+                scene.add(mesh);
+                meshes.push(mesh);
+            }
+
+            function animate() {
+                requestAnimationFrame(animate);
+                const t = Date.now() * 0.001;
+                meshes.forEach((mesh, i) => {
+                    if (mesh.userData.axis === 'y') mesh.rotation.y += mesh.userData.speed * 0.02;
+                    else if (mesh.userData.axis === 'x') mesh.rotation.x += mesh.userData.speed * 0.02;
+                    else {
+                        mesh.rotation.x += 0.01;
+                        mesh.rotation.y += 0.015;
+                    }
+                    if (i >= 4) mesh.position.y += Math.sin(t + i) * 0.008;
+                });
+                renderer.render(scene, camera);
+            }
+
+            window.addEventListener('resize', () => {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            });
+            animate();
+        })();
 
         // Form Submission
         const contactForm = document.querySelector('.contact-form');
